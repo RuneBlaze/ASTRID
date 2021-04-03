@@ -12,6 +12,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - uses: abhinavsingh/setup-bazel@v3
 
       - name: Install Visual C++ for Python 2.7
         if: runner.os == 'Windows'
@@ -21,9 +22,24 @@ jobs:
         uses: joerick/cibuildwheel@v1.10.0
         env:
           CIBW_MANYLINUX_X86_64_IMAGE: "stellaraccident/manylinux2014_x86_64-bazel-3.7.2:latest"
-          CIBW_ARCHS: "x86_64"
+          CIBW_ARCHS_LINUX: "x86_64"
           CIBW_BUILD: "{cp,pp}3*-*"
 
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
+
+  upload_pypi:
+    needs: [build_wheels]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_password }}
