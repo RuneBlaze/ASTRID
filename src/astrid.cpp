@@ -1,11 +1,7 @@
-#include "Args.hpp"
-#include "DistanceMethods/DistanceMethods.hpp"
-#include "multind.hpp"
-#include "octal.hpp"
-#include "phylokit/newick.hpp"
 #include <fstream>
 #include <glog/logging.h>
 #include <iostream>
+#include "astrid.hpp"
 
 bool has_missing(TaxonSet &ts, DistanceMatrix &dm) {
   for (size_t i = 0; i < ts.size(); i++) {
@@ -108,7 +104,7 @@ void fill_in(TaxonSet &ts, DistanceMatrix &dm, double cval) {
   std::cerr << "Filled in " << count << " elements" << std::endl;
 }
 
-void fill_in(TaxonSet &ts, DistanceMatrix &dm, std::string tree) {
+void fill_in(TaxonSet &ts, DistanceMatrix &dm, std::string tree, bool fill_in) {
   std::vector<std::string> trees;
   trees.push_back(tree);
   DistanceMatrix dm_tree = get_distance_matrix(ts, trees, NULL);
@@ -117,6 +113,27 @@ void fill_in(TaxonSet &ts, DistanceMatrix &dm, std::string tree) {
     for (size_t j = i; j < ts.size(); j++) {
       if (!dm.has(i, j)) {
         dm(i, j) = dm_tree(i, j);
+        if (fill_in) dm.masked(i, j) = 1;
+      }
+    }
+  }
+}
+
+void prune(TaxonSet &ts, DistanceMatrix &dm, int threshold) {
+  for (size_t i = 0; i < ts.size(); i++) {
+    for (size_t j = i; j < ts.size(); j++) {
+      if (dm.masked(i, j) <= threshold) {
+        dm(i, j) = 0;
+        dm.masked(i, j) = 0;
+      }
+    }
+  }
+}
+
+void finalize(TaxonSet &ts, DistanceMatrix &dm) {
+  for (size_t i = 0; i < ts.size(); i++) {
+    for (size_t j = i; j < ts.size(); j++) {
+      if (!dm.has(i, j)) {
         dm.masked(i, j) = 1;
       }
     }
@@ -238,4 +255,74 @@ int main(int argc, char **argv) {
   std::cout << tree << std::endl;
 
   return 0;
+}
+
+// FIXME: I probably introduced memory leaks
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+namespace py = pybind11;
+
+DistanceMatrix mk_distance_matrix(TaxonSet &ts,
+                                   std::vector<std::string> newicks) {
+  return get_distance_matrix(ts, newicks,nullptr);
+}
+
+PYBIND11_MODULE(asterid, m) {
+    m.doc() = "pybind11 astrid";
+    
+    py::class_<TaxonSet>(m, "TaxonSet")
+        .def(py::init<int>())
+        .def("size", &TaxonSet::size)
+        .def("__len__", &TaxonSet::size)
+        .def("__iter__", [](TaxonSet &ts){
+          return py::make_iterator(ts.begin(), ts.end());
+        },py::keep_alive<0, 1>())
+        .def("add", &TaxonSet::add)
+        .def("__getitem__", [](TaxonSet &ts, std::string name) {
+          return ts[name];
+        });
+
+    py::class_<DistanceMatrix>(m, "DistanceMatrix")
+        .def(py::init<const TaxonSet &>())
+        .def("str", [](DistanceMatrix &m) {
+          return m.str();
+        })
+        .def("fill_in", [](DistanceMatrix &m, TaxonSet &ts, std::string tree) {
+          fill_in(ts, m, tree);
+        })
+        .def("has", [](DistanceMatrix &m, Taxon first, Taxon second){
+          return m.has(first, second) > 0;
+        })
+        .def("fill_in_transient", [](DistanceMatrix &m, TaxonSet &ts, std::string tree) {
+          fill_in(ts, m, tree, false);
+        })
+        .def("finalize",  [](DistanceMatrix &m, TaxonSet &ts){
+          finalize(ts, m);
+        })
+        .def("prune", [](DistanceMatrix &dm, TaxonSet &ts, int threshold){
+          prune(ts, dm, threshold);
+        })
+        .def("__getitem__", [](DistanceMatrix &m, std::pair<Taxon, Taxon> taxons){
+          // this possibly UBs
+          return m.get(taxons.first, taxons.second);
+        })
+        .def("__setitem__", [](DistanceMatrix &m, std::pair<Taxon, Taxon> taxons, int value){
+          // this possibly UBs
+          m(taxons.first, taxons.second) = value;
+        })
+        .def("getmask", [](DistanceMatrix &m, std::pair<Taxon, Taxon> taxons){
+          // this possibly UBs
+          return m.masked(taxons.first, taxons.second);
+        })
+        .def("setmask", [](DistanceMatrix &m, std::pair<Taxon, Taxon> taxons, int value){
+          // this possibly UBs
+          m.masked(taxons.first, taxons.second) = value;
+        });
+    m.def("mk_distance_matrix", &mk_distance_matrix, "making distance matrices");
+    m.def("get_ts", &get_ts, "getting taxonset");
+    m.def("upgma_star", &UPGMA, "UPGMA*");
+    m.def("fastme_balme", &FastME, "FastME");
+    m.def("rapidnj", &RapidNJ, "RapidNJ");
+    m.def("deroot", &deroot, "deroot");
 }

@@ -26,7 +26,8 @@ std::string FastME (TaxonSet& ts, DistanceMatrix& dm, int nni, int spr)
 
 	for (int i = 0; i < size; i++) {
 	  for (int j = 0; j < size; j++) {
-	    if (!dm.isMasked(i,j))
+		// FIXME: this seems to have no effect whatsoever, in effect NOP
+	    // if (!dm.isMasked(i,j))
 	      D[i][j] = dm(i,j);
 	  }
 	}

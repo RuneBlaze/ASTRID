@@ -1,0 +1,1 @@
+CIBW_MANYLINUX_X86_64_IMAGE=stellaraccident/manylinux2014_x86_64-bazel-3.7.2:latest CIBW_ARCHS=x86_64 CIBW_BUILD="cp37-*" cibuildwheel --platform linux --output-dir wheelhouse
