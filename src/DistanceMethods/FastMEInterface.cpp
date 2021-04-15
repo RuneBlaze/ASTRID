@@ -8,8 +8,7 @@ typedef set mySet;
 #include <sstream>
 #include "phylokit/newick.hpp"
 
-std::string FastME (TaxonSet& ts, DistanceMatrix& dm, int nni, int spr)
-{
+std::string RunFastME (TaxonSet& ts, DistanceMatrix &dm, int nni, int spr, int method) {
 	int size = ts.size();
 	int numSpecies = size;
 	double **D, **A;
@@ -17,7 +16,6 @@ std::string FastME (TaxonSet& ts, DistanceMatrix& dm, int nni, int spr)
 	A = initDoubleMatrix (2*numSpecies-2);
 	D = initDoubleMatrix (2*numSpecies-2);
 	fillZeroMatrix (&A, 2*numSpecies-2);
-
 
 	for (int i=0; i<size; i++)
 	{
@@ -32,10 +30,9 @@ std::string FastME (TaxonSet& ts, DistanceMatrix& dm, int nni, int spr)
 	  }
 	}
 
-
 	Options options;
 	Set_Defaults_Input (&options);
-	options.method = TaxAddBAL;
+	options.method = method;
 	options.use_SPR = spr;
 	options.use_NNI = nni;
 	options.NNI    = BALNNI;
@@ -64,4 +61,13 @@ std::string FastME (TaxonSet& ts, DistanceMatrix& dm, int nni, int spr)
 
 	NewickPrintTreeStr (t, tree_output, 2);
 	return unmap_newick_names(std::string(tree_output), ts);
+}
+
+std::string FastNJ (TaxonSet& ts, DistanceMatrix &dm, int nni, int spr) {
+	return RunFastME(ts, dm, nni, spr, NJ);
+}
+
+std::string FastME (TaxonSet& ts, DistanceMatrix& dm, int nni, int spr)
+{
+	return RunFastME(ts, dm, nni, spr, TaxAddBAL);
 }

@@ -26,6 +26,48 @@ TaxonSet get_ts(std::vector<std::string> &newicks) {
   return ts;
 }
 
+DistanceMatrix get_njmini_matrix(TaxonSet &ts, std::vector<std::string> newicks, std::vector<double> weights, std::vector<Clade> &tree_taxa, IndSpeciesMapping &imap) {
+  DistanceMatrix result(ts);
+  result = DistanceMatrix(imap.species());
+
+  for (size_t i = 0; i < newicks.size(); i++) {
+    std::string newick_derooted = deroot(newicks[i]);
+    double w = weights[i];
+
+    DistanceMatrix dm(ts, newick_derooted);
+    if (tree_taxa.size() > i) {
+      for (Taxon t1 : ts) {
+        for (Taxon t2 : ts) {
+          if (!(tree_taxa[i].contains(t1) && tree_taxa[i].contains(t2))) {
+            dm(t1, t2) = 0;
+            dm.masked(t1, t2) = 0;
+          }
+        }
+      }
+    }
+
+    dm *= w;
+    dm = imap.mininj(dm);
+
+    result += dm;
+  }
+
+  for (size_t i = 0; i < ts.size(); i++) {
+    for (size_t j = i; j < ts.size(); j++) {
+      if (result.masked(i, j))
+        result(i, j) /= result.masked(i, j);
+    }
+  }
+
+  return result;
+}
+
+DistanceMatrix mk_njmini_matrix(TaxonSet &ts, std::vector<std::string> newicks, IndSpeciesMapping &imap) {
+  std::vector<Clade> vc;
+  return get_njmini_matrix(ts, newicks,
+                             std::vector<double>(newicks.size(), 1), vc, imap);
+}
+
 DistanceMatrix get_distance_matrix(TaxonSet &ts,
                                    std::vector<std::string> newicks,
                                    std::vector<double> weights,
@@ -78,6 +120,84 @@ DistanceMatrix get_distance_matrix(TaxonSet &ts,
   std::vector<Clade> vc;
   return get_distance_matrix(ts, newicks,
                              std::vector<double>(newicks.size(), 1), vc, imap);
+}
+
+// https://stackoverflow.com/a/24235744
+double median(std::vector<double> &v)
+{
+  size_t n = v.size() / 2;
+  std::nth_element(v.begin(), v.begin()+n, v.end());
+  int vn = v[n];
+  if(v.size()%2 == 1)
+  {
+    return vn;
+  }else
+  {
+    std::nth_element(v.begin(), v.begin()+n-1, v.end());
+    return 0.5*(vn+v[n-1]);
+  }
+}
+
+double variance(std::vector<double> &v)
+{
+  
+}
+
+// FIXME: this should be more generic
+DistanceMatrix get_median_distance_matrix(TaxonSet &ts, std::vector<std::string> newicks) {
+  DistanceMatrix result(ts);
+  std::vector<DistanceMatrix> mats;
+  mats.reserve(newicks.size());
+  for (size_t i = 0; i < newicks.size(); i ++) {
+    mats.push_back(DistanceMatrix(ts, newicks[i]));
+  }
+
+  for (size_t i = 0; i < ts.size(); i++) {
+    for (size_t j = i; j < ts.size(); j++) {
+      std::vector<double> values;
+      for (size_t k = 0; k < newicks.size(); k++) {
+        if (mats[k].has(i, j)) {
+          values.push_back(mats[k](i, j));
+        }
+      }
+      if (values.empty()) {
+        result(i, j) = 0;
+        result.masked(i, j) = 0;
+      } else {
+        result(i, j) = median(values);
+        result.masked(i, j) = values.size();
+      }
+    }
+  }
+  return result;
+}
+
+DistanceMatrix get_variance_matrix(TaxonSet &ts, std::vector<std::string> newicks) {
+  DistanceMatrix result(ts);
+  std::vector<DistanceMatrix> mats;
+  mats.reserve(newicks.size());
+  for (size_t i = 0; i < newicks.size(); i ++) {
+    mats.push_back(DistanceMatrix(ts, newicks[i]));
+  }
+
+  for (size_t i = 0; i < ts.size(); i++) {
+    for (size_t j = i; j < ts.size(); j++) {
+      std::vector<double> values;
+      for (size_t k = 0; k < newicks.size(); k++) {
+        if (mats[k].has(i, j)) {
+          values.push_back(mats[k](i, j));
+        }
+      }
+      if (values.empty()) {
+        result(i, j) = 0;
+        result.masked(i, j) = 0;
+      } else {
+        result(i, j) = median(values);
+        result.masked(i, j) = values.size();
+      }
+    }
+  }
+  return result;
 }
 
 DistanceMatrix get_distance_matrix(TaxonSet &ts,
@@ -268,6 +388,11 @@ DistanceMatrix mk_distance_matrix(TaxonSet &ts,
   return get_distance_matrix(ts, newicks,nullptr);
 }
 
+DistanceMatrix mk_distance_median_matrix(TaxonSet &ts,
+                                   std::vector<std::string> newicks) {
+  return get_median_distance_matrix(ts, newicks);
+}
+
 PYBIND11_MODULE(asterid, m) {
     m.doc() = "pybind11 astrid";
     
@@ -283,8 +408,16 @@ PYBIND11_MODULE(asterid, m) {
           return ts[name];
         });
 
+    py::class_<IndSpeciesMapping>(m, "IndSpeciesMapping")
+      .def(py::init<TaxonSet &>())
+      .def("load",[](IndSpeciesMapping &imap, std::string &infile) {
+        imap.load(infile);
+      })
+      .def("species", &IndSpeciesMapping::species, py::return_value_policy::reference_internal);
+
     py::class_<DistanceMatrix>(m, "DistanceMatrix")
         .def(py::init<const TaxonSet &>())
+        .def(py::init<const TaxonSet &, std::string>())
         .def("str", [](DistanceMatrix &m) {
           return m.str();
         })
@@ -320,9 +453,12 @@ PYBIND11_MODULE(asterid, m) {
           m.masked(taxons.first, taxons.second) = value;
         });
     m.def("mk_distance_matrix", &mk_distance_matrix, "making distance matrices");
+    m.def("mk_distance_median_matrix", &mk_distance_median_matrix, "making distance matrices by median");
     m.def("get_ts", &get_ts, "getting taxonset");
     m.def("upgma_star", &UPGMA, "UPGMA*");
     m.def("fastme_balme", &FastME, "FastME");
+    m.def("fastme_nj", &FastNJ, "NJ");
+    m.def("mk_njmini_matrix", &mk_njmini_matrix, "making njmini matrices");
     m.def("rapidnj", &RapidNJ, "RapidNJ");
     m.def("deroot", &deroot, "deroot");
 }

@@ -6,8 +6,9 @@
 #include <queue>
 #include <sstream>
 
-
+std::string RunFastME (TaxonSet& ts, DistanceMatrix& dm, int nni, int spr, int method);
 std::string FastME (TaxonSet& ts, DistanceMatrix& dm, int nni, int spr);
+std::string FastNJ (TaxonSet& ts, DistanceMatrix& dm, int nni, int spr);
 
 std::string RapidNJ (TaxonSet& ts, DistanceMatrix& dm);
 

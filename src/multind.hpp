@@ -30,6 +30,7 @@ public:
   Taxon operator[](Taxon t);
 
   DistanceMatrix average(DistanceMatrix& indiv_mat) const;
+  DistanceMatrix mininj(DistanceMatrix& indiv_mat) const;
 
   file_format identify(std::istream& instream);
 

@@ -159,7 +159,6 @@ void IndSpeciesMapping::load(std::istream& instream) {
 }
 
 
-
 void IndSpeciesMapping::load(std::string& infile) {
   std::ifstream instream(infile);
   load(instream);
@@ -168,6 +167,38 @@ void IndSpeciesMapping::load(std::string& infile) {
 
 Taxon IndSpeciesMapping::operator[](Taxon t) {
   return ind_species_map.at(t);
+}
+
+DistanceMatrix IndSpeciesMapping::mininj(DistanceMatrix& indiv_mat) const {
+  DistanceMatrix species_mat(species_ts);
+  for (const Taxon i_s : species_ts) {
+    for (const Taxon j_s : species_ts) {
+      if (i_s == j_s) {
+        species_mat(i_s, j_s) = 0;
+        species_mat.masked(i_s, j_s) = 1;
+        continue;
+      }
+      
+      double count_ij = 0;
+      double min_ij = 1231231234;
+      for (const Taxon i_i : species_ind_map.at(i_s) ) {
+        for (const Taxon j_i : species_ind_map.at(j_s) ) {
+          if (indiv_mat.has(i_i, j_i)) {
+            min_ij = std::min(indiv_mat(i_i, j_i), min_ij);
+            count_ij++;
+          }
+        }
+      }
+      if (count_ij == 0) {
+	      species_mat(i_s, j_s) = 0;
+	      species_mat.masked(i_s, j_s) = 0;	
+      } else {      
+	      species_mat(i_s, j_s) = min_ij;
+	      species_mat.masked(i_s, j_s) = 1;		
+      }
+    }
+  }
+  return species_mat;
 }
 
 DistanceMatrix IndSpeciesMapping::average(DistanceMatrix& indiv_mat) const {
