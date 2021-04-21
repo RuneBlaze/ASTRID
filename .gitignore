@@ -144,3 +144,5 @@ bazel-testlogs
 
 python_test
 wheelhouse
+
+*.out

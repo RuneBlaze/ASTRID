@@ -271,6 +271,22 @@ void progressbar(double pct) {
   std::cerr << "]\r";
 }
 
+
+
+std::vector<std::string> run_octal(TaxonSet &ts, std::vector<std::string> &gts, std::string &st) {
+  std::vector<std::string> completed_trees;
+  completed_trees.reserve(gts.size());
+  Tree ST = newick_to_treeclades(st, ts);
+  for (const std::string &gt : gts) {
+    Tree GT = newick_to_treeclades(gt, ts);
+    octal_complete(ST, GT);
+    std::stringstream ss;
+    ss << GT;
+    completed_trees.push_back(ss.str());
+  }
+  return completed_trees;
+}
+
 int main(int argc, char **argv) {
   Args args(argc, argv);
 
@@ -418,6 +434,9 @@ PYBIND11_MODULE(asterid, m) {
     py::class_<DistanceMatrix>(m, "DistanceMatrix")
         .def(py::init<const TaxonSet &>())
         .def(py::init<const TaxonSet &, std::string>())
+        .def("subtract", [](DistanceMatrix &m, const TaxonSet &ts, double value){
+          
+        })
         .def("str", [](DistanceMatrix &m) {
           return m.str();
         })
@@ -440,7 +459,7 @@ PYBIND11_MODULE(asterid, m) {
           // this possibly UBs
           return m.get(taxons.first, taxons.second);
         })
-        .def("__setitem__", [](DistanceMatrix &m, std::pair<Taxon, Taxon> taxons, int value){
+        .def("__setitem__", [](DistanceMatrix &m, std::pair<Taxon, Taxon> taxons, double value){
           // this possibly UBs
           m(taxons.first, taxons.second) = value;
         })
@@ -461,4 +480,5 @@ PYBIND11_MODULE(asterid, m) {
     m.def("mk_njmini_matrix", &mk_njmini_matrix, "making njmini matrices");
     m.def("rapidnj", &RapidNJ, "RapidNJ");
     m.def("deroot", &deroot, "deroot");
+    m.def("run_octal", &run_octal, "run octal");
 }
