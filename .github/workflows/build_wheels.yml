@@ -14,12 +14,12 @@ jobs:
       - uses: actions/checkout@v2
       - uses: abhinavsingh/setup-bazel@v3
 
-      - name: Install Visual C++ for Python 2.7
-        if: runner.os == 'Windows'
-        run: choco install vcpython27 -f -y
+      # - name: Install Visual C++ for Python 2.7
+      #   if: runner.os == 'Windows'
+      #   run: choco install vcpython27 -f -y
 
       - name: Build wheels
-        uses: joerick/cibuildwheel@v1.10.0
+        uses: joerick/cibuildwheel@v1.11.1
         env:
           CIBW_MANYLINUX_X86_64_IMAGE: "stellaraccident/manylinux2014_x86_64-bazel-3.7.2:latest"
           CIBW_ARCHS_LINUX: "x86_64"
