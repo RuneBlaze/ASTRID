@@ -1,5 +1,6 @@
 #include <fstream>
 #include <glog/logging.h>
+#include <cmath>
 #include <iostream>
 #include "astrid.hpp"
 
@@ -250,6 +251,25 @@ void prune(TaxonSet &ts, DistanceMatrix &dm, int threshold) {
   }
 }
 
+// assumption: r is the original matrix
+double matrix_norm(TaxonSet &ts, DistanceMatrix &l, DistanceMatrix &r,
+  bool support, bool frobenius) {
+    double sum = 0;
+    for (size_t i = 0; i < ts.size(); i++) {
+      for (size_t j = i; j < ts.size(); j++) {
+        if (r.has(i, j)) {
+          double acc = l(i, j) - r(i, j);
+          if (frobenius) acc = acc * acc;
+          else acc = abs(acc);
+          if (support) acc *= r.masked(i, j);
+          sum += acc;
+        }
+      }
+    }
+    if (frobenius) sum = sqrt(sum);
+    return sum;
+}
+
 void finalize(TaxonSet &ts, DistanceMatrix &dm) {
   for (size_t i = 0; i < ts.size(); i++) {
     for (size_t j = i; j < ts.size(); j++) {
@@ -437,6 +457,10 @@ PYBIND11_MODULE(asterid, m) {
         .def("subtract", [](DistanceMatrix &m, const TaxonSet &ts, double value){
           
         })
+        .def("__copy__", [](const DistanceMatrix &m){
+          DistanceMatrix copy(m);
+          return copy;
+        }, py::return_value_policy::move)
         .def("str", [](DistanceMatrix &m) {
           return m.str();
         })
@@ -472,6 +496,7 @@ PYBIND11_MODULE(asterid, m) {
           m.masked(taxons.first, taxons.second) = value;
         });
     m.def("mk_distance_matrix", &mk_distance_matrix, "making distance matrices");
+    m.def("matrix_norm", &matrix_norm, "calculate matrix norm");
     m.def("mk_distance_median_matrix", &mk_distance_median_matrix, "making distance matrices by median");
     m.def("get_ts", &get_ts, "getting taxonset");
     m.def("upgma_star", &UPGMA, "UPGMA*");

@@ -1,6 +1,13 @@
 # ASTRID-2
 
-This repository is under development, and there may be some changes to the user interface in the future.
+This version contains Python3 bindings to ASTRID-2. This repository is somewhat
+for my own research only, and has already violated open source best practices.
+
+With that said, feel free to contribute (although I don't see anyone contribute).
+
+-----------------
+
+~~This repository is under development, and there may be some changes to the user interface in the future.~~
 
 
 ASTRID-2 is a method for estimating species trees from gene trees. 
