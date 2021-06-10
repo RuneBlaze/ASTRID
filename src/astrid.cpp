@@ -116,7 +116,7 @@ DistanceMatrix get_distance_matrix(TaxonSet &ts,
 }
 
 DistanceMatrix get_distance_matrix(TaxonSet &ts,
-                                   std::vector<std::string> newicks,
+                                   const std::vector<std::string>& newicks,
                                    IndSpeciesMapping *imap) {
   std::vector<Clade> vc;
   return get_distance_matrix(ts, newicks,

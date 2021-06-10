@@ -9,24 +9,24 @@
 
 
 DistanceMatrix get_distance_matrix(TaxonSet &ts,
-                                   std::vector<std::string> newicks,
+                                   const std::vector<std::string>& newicks,
                                    std::vector<double> weights,
                                    std::vector<Clade> &tree_taxa,
                                    IndSpeciesMapping *imap);
 
 DistanceMatrix get_distance_matrix(TaxonSet &ts,
-                                   std::vector<std::string> newicks,
+                                   const std::vector<std::string>& newicks,
                                    IndSpeciesMapping *imap);
 
 DistanceMatrix mk_distance_matrix(TaxonSet &ts,
-                                   std::vector<std::string> newicks);
+                                   const std::vector<std::string>& newicks);
 
 DistanceMatrix get_distance_matrix(TaxonSet &ts,
-                                   std::vector<std::string> newicks,
+                                   const std::vector<std::string>& newicks,
                                    std::vector<Clade> &tree_taxa,
                                    IndSpeciesMapping *imap);
 
-void fill_in(TaxonSet &ts, DistanceMatrix &dm, std::string tree, bool fill_in = true);
-void finalize(TaxonSet &ts, DistanceMatrix &dm, std::string tree);
+void fill_in(TaxonSet &ts, DistanceMatrix &dm, const std::string& tree, bool fill_in = true);
+// void finalize(TaxonSet &ts, DistanceMatrix &dm, const std::string& tree);
 
 #endif
