@@ -70,7 +70,7 @@ DistanceMatrix mk_njmini_matrix(TaxonSet &ts, std::vector<std::string> newicks, 
 }
 
 DistanceMatrix get_distance_matrix(TaxonSet &ts,
-                                   std::vector<std::string> newicks,
+                                   const std::vector<std::string> &newicks,
                                    std::vector<double> weights,
                                    std::vector<Clade> &tree_taxa,
                                    IndSpeciesMapping *imap) {
@@ -202,7 +202,7 @@ DistanceMatrix get_variance_matrix(TaxonSet &ts, std::vector<std::string> newick
 }
 
 DistanceMatrix get_distance_matrix(TaxonSet &ts,
-                                   std::vector<std::string> newicks,
+                                   const std::vector<std::string>& newicks,
                                    std::vector<Clade> &tree_taxa,
                                    IndSpeciesMapping *imap) {
   return get_distance_matrix(
@@ -225,7 +225,7 @@ void fill_in(TaxonSet &ts, DistanceMatrix &dm, double cval) {
   std::cerr << "Filled in " << count << " elements" << std::endl;
 }
 
-void fill_in(TaxonSet &ts, DistanceMatrix &dm, std::string tree, bool fill_in) {
+void fill_in(TaxonSet &ts, DistanceMatrix &dm, const std::string &tree, bool fill_in) {
   std::vector<std::string> trees;
   trees.push_back(tree);
   DistanceMatrix dm_tree = get_distance_matrix(ts, trees, NULL);
@@ -420,7 +420,7 @@ int main(int argc, char **argv) {
 namespace py = pybind11;
 
 DistanceMatrix mk_distance_matrix(TaxonSet &ts,
-                                   std::vector<std::string> newicks) {
+                                   const std::vector<std::string>& newicks) {
   return get_distance_matrix(ts, newicks,nullptr);
 }
 
