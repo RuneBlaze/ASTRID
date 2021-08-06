@@ -393,9 +393,10 @@ int main(int argc, char **argv) {
       tree = FastME(*species_ts, dm, 1, 1);
     } else if (method == "bionj") {
       tree = BioNJStar(*species_ts, dm, args.java_opts);
-    } else if (method == "rapidnj") {
-      tree = RapidNJ(*species_ts, dm);
-    }
+    } 
+    // else if (method == "rapidnj") {
+    //   tree = RapidNJ(*species_ts, dm);
+    // }
 
     std::ofstream outfile(args.outfile + "." + std::to_string(iter));
     outfile << tree << std::endl;
@@ -442,6 +443,9 @@ PYBIND11_MODULE(asterid, m) {
         .def("add", &TaxonSet::add)
         .def("__getitem__", [](TaxonSet &ts, std::string name) {
           return ts[name];
+        })
+        .def("__getitem__", [](TaxonSet &ts, const int i) {
+          return ts[i];
         });
 
     py::class_<IndSpeciesMapping>(m, "IndSpeciesMapping")
@@ -503,7 +507,7 @@ PYBIND11_MODULE(asterid, m) {
     m.def("fastme_balme", &FastME, "FastME");
     m.def("fastme_nj", &FastNJ, "NJ");
     m.def("mk_njmini_matrix", &mk_njmini_matrix, "making njmini matrices");
-    m.def("rapidnj", &RapidNJ, "RapidNJ");
+    // m.def("rapidnj", &RapidNJ, "RapidNJ");
     m.def("deroot", &deroot, "deroot");
     m.def("run_octal", &run_octal, "run octal");
 }

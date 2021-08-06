@@ -5,7 +5,7 @@ cc_library(
     deps = [
         "PhyDStar",
         ":FastMEInterface",
-        ":RapidNJInterface",
+        
         ":UPGMA",
     ],
 )
@@ -17,7 +17,7 @@ cc_library(
     deps = [
         "PhyDStar-stub",
         ":FastMEInterface",
-        ":RapidNJInterface",
+        
         ":UPGMA",
     ],
 )
@@ -39,9 +39,9 @@ cc_library(
     deps =
         select(
             {
-                "//:is_windows": [],
+                
                 "//conditions:default": [
-                    "//third_party/rapidNJ",
+                    
                 ],
             },
         ) + [
