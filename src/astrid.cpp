@@ -139,10 +139,7 @@ double median(std::vector<double> &v)
   }
 }
 
-double variance(std::vector<double> &v)
-{
-  
-}
+
 
 // FIXME: this should be more generic
 DistanceMatrix get_median_distance_matrix(TaxonSet &ts, std::vector<std::string> newicks) {
