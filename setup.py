@@ -5,7 +5,7 @@ import sysconfig
 import platform
 import subprocess
 from pathlib import Path
-
+from distutils import ccompiler
 from distutils.version import LooseVersion
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
@@ -28,7 +28,8 @@ class BazelBuild(build_ext):
         dest_path = Path(self.get_ext_fullpath(ext.name)).resolve()
         dest_directory = dest_path.parents[0]
         dest_directory.mkdir(parents=True, exist_ok=True)
-        self.copy_file("bazel-bin/src/asterid.so", dest_path)
+        suffix = ccompiler.new_compiler().shared_lib_extension
+        self.copy_file(f"bazel-bin/src/asterid{suffix}", dest_path)
         
         
 ext_modules = [
