@@ -19,12 +19,11 @@ jobs:
       #   run: choco install vcpython27 -f -y
 
       - name: Build wheels
-        uses: joerick/cibuildwheel@v1.10.0
+        uses: pypa/cibuildwheel@v2.4.0
         env:
           CIBW_MANYLINUX_X86_64_IMAGE: "stellaraccident/manylinux2014_x86_64-bazel-3.7.2:latest"
           CIBW_ARCHS_LINUX: "x86_64"
-          CIBW_BUILD: "cp3*-*"
-          CIBW_SKIP: pp*
+          CIBW_BUILD: "cp3*-* pp*"
 
       - uses: actions/upload-artifact@v2
         with:
