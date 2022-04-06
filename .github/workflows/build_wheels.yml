@@ -23,7 +23,7 @@ jobs:
         env:
           CIBW_MANYLINUX_X86_64_IMAGE: "stellaraccident/manylinux2014_x86_64-bazel-5.0.0:latest"
           CIBW_ARCHS_LINUX: "x86_64"
-          CIBW_BUILD: "cp37-* cp38-* pp37* pp38*"
+          CIBW_BUILD: "cp37-manylinux* cp38-manylinux* pp37* pp38*"
 
       - uses: actions/upload-artifact@v2
         with:
