@@ -38,7 +38,7 @@ ext_modules = [
 
 setup(
     name="asterid",
-    version="0.1.6.post1",
+    version="0.1.6.post2",
     author="runeblaze",
     author_email="runeblaze@excite.co.jp", 
   packages=find_packages(),
